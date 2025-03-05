@@ -1,0 +1,31 @@
+# Introduction
+
+This application is built to help home buyers and independent investors keep track of real estate listings such as apartments and houses. The main idea is that users can add property URLs to the app, which then scrapes the listing site for key details and displays the summarized information in an easily readable grid. The application is designed to automatically check for updates once a day and highlight any changes in property details like price, address, and bedroom count. With a focus on a simple and generic design, the flow emphasizes a clear, straightforward experience from sign-up to daily use.
+
+# Onboarding and Sign-In/Sign-Up
+
+New users begin their journey by accessing the landing page where they can sign up or log in. The sign-up process uses Supabase Auth to securely manage user registration. If a user wishes to create an account, they enter their email and password, and since registrations are subject to administrative approval, they receive a response indicating that their account is pending until it is activated. Users also have an option to use a social login if provided. For those who already have an account, the log-in page offers a straightforward sign-in process with email and password fields. There is also a forgot password option to help users recover lost account details. Once signed in, users have the ability to log out at any time, ensuring a secure experience throughout.
+
+# Main Dashboard or Home Page
+
+After successful authentication, users are taken to the main dashboard. This page serves as the central hub of the application and displays a grid layout of the real estate listings that the user has chosen to follow. The dashboard presents each property with key attributes such as price, address or location, bedroom count, and the last time the listing was checked. There are clearly marked areas such as a header and sidebar for navigation, which allow users to easily move between viewing their listings, adding new properties, and checking detailed change histories. The design ensures that moving from one section to another is intuitive and connected, making it simple to find any feature without unnecessary clicks.
+
+# Detailed Feature Flows and Page Transitions
+
+The journey continues on the Add Listing page where a user can paste the URL of a property listing. Once the URL is entered, the app sends the link to a scraping function that extracts essential data from the listing site. A summary of the property details, including title, price, location, and images, is then displayed for the user to review. Users can confirm the addition of the listing to their dashboard, or they have the option to manually input the required information if they prefer not to use the scraping function. Once confirmed, the data is saved in Supabase and immediately appears on the dashboard.
+
+The background automated process is set up to run once a day using a cron job or scheduled function. This service iterates over each saved listing and calls the scraping microservice with the listing URL to fetch the latest data. When differences between the newly scraped data and the stored information are detected, those changes are recorded and the property is flagged as “Updated.” Users can then click on any listing from their dashboard to view a detailed change history. This history shows updates such as price alterations and changes in property status, and it also supports the automated email notification feature that alerts users about relevant changes.
+
+In addition to these core flows, there are also transitions for auxiliary features. When a user clicks on account-related options, they are taken to their profile settings where they can manage personal information, update passwords or preferences, and configure notification settings. After making changes to their account or preferences, the app smoothly returns the user to the main dashboard or previous page, ensuring a consistent experience throughout every action.
+
+# Settings and Account Management
+
+Within the settings area, users find a dedicated space to manage their profile and account details. Here, they can update personal information such as email and password, change their notification preferences, and review their registered listings. The process is straightforward: users navigate from the main dashboard to the settings page using the provided header or sidebar links, make the necessary adjustments, and then easily return back to the dashboard. This section also encompasses any billing or subscription settings if they become relevant in the future, though for now the app is free to use once approved by an administrator.
+
+# Error States and Alternate Paths
+
+Throughout the application, care has been taken to account for error states and unexpected scenarios. If a user inputs an invalid URL when adding a listing, the app clearly displays an error message and guides the user to correct the input. In cases where the scraping function fails or returns incomplete data, the app offers a fallback option for manual entry, ensuring that the user experience is not interrupted. When a user attempts to access restricted sections without proper authentication or during unapproved registration periods, a friendly error or additional instruction page is displayed. These scenarios are designed to help users recover gracefully and return to a normal flow with minimal frustration.
+
+# Conclusion and Overall App Journey
+
+The overall journey of the app ensures that users can smoothly transition from signing up and logging in to managing and tracking their real estate listings. Every feature, from adding a new listing to monitoring daily updates and reviewing change histories, has been designed to connect seamlessly with the next step in the process. With an intuitive dashboard that aggregates important property details and background processes that keep data updated, the application aims to provide a streamlined experience that empowers home buyers and independent investors to remain informed about the properties they care about. The clear flow from initial onboarding to everyday usage establishes a dependable and user-friendly environment that anticipates and responds to user needs at every turning point.
