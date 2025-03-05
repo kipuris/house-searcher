@@ -72,6 +72,14 @@ const password = ref("");
 const error = ref(null);
 const loading = ref(false);
 
+// Set meta tags for the login page
+const { setPageMeta } = useSiteMeta();
+setPageMeta({
+  title: "Login",
+  description:
+    "Sign in to your House Searcher account to manage your property listings.",
+});
+
 const handleLogin = async () => {
   try {
     loading.value = true;

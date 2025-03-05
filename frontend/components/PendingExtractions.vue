@@ -65,7 +65,6 @@ const loading = ref(false);
 const checkingStatus = ref({});
 
 const runtimeConfig = useRuntimeConfig();
-const firecrawlApiKey = runtimeConfig.public.firecrawlApiKey; // Use runtimeConfig for client-side
 
 // Define emits
 const emit = defineEmits(["update-listing"]);
@@ -125,22 +124,17 @@ async function checkExtractionStatus(listing) {
   checkingStatus.value = { ...checkingStatus.value, [listing.id]: true };
 
   try {
-    // Call Firecrawl API to check status
-    const response = await fetch(
-      `${runtimeConfig.public.firecrawlApiUrl}/extract/${listing.extraction_job_id}`,
+    // Use Supabase edge function instead of direct API call
+    const { data: result, error: checkError } = await supabase.functions.invoke(
+      `check-extraction/${listing.extraction_job_id}`,
       {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${firecrawlApiKey}`,
-        },
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`Status check failed: ${response.status}`);
+    if (checkError) {
+      throw new Error(`Status check failed: ${checkError.message}`);
     }
-
-    const result = await response.json();
 
     if (result.status === "completed") {
       // Update the listing with the extracted data
@@ -247,19 +241,16 @@ async function checkAllPendingExtractions() {
       if (!listing.extraction_job_id) continue;
 
       try {
-        const response = await fetch(
-          `${runtimeConfig.public.firecrawlApiUrl}/extract/${listing.extraction_job_id}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${firecrawlApiKey}`,
-            },
-          }
-        );
+        // Use Supabase edge function instead of direct API call
+        const { data: result, error: checkError } =
+          await supabase.functions.invoke(
+            `check-extraction/${listing.extraction_job_id}`,
+            {
+              method: "GET",
+            }
+          );
 
-        if (!response.ok) continue;
-
-        const result = await response.json();
+        if (checkError) continue;
 
         if (result.status === "completed") {
           // Update the listing with the extracted data

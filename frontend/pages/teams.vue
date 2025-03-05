@@ -214,6 +214,14 @@ const addMemberError = ref<string | null>(null);
 const deletingTeam = ref<string | null>(null);
 const removingMember = ref<string | null>(null);
 
+// Set meta tags for the teams page
+const { setPageMeta } = useSiteMeta();
+setPageMeta({
+  title: "Teams",
+  description:
+    "Collaborate with others on property searches. Create and manage teams to share listings.",
+});
+
 // Use useAsyncData to fetch teams data
 const {
   data: teamsData,

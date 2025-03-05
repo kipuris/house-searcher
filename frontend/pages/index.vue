@@ -38,12 +38,22 @@
 </template>
 
 <script setup>
+import { useSiteMeta } from "~/composables/useSiteMeta";
+
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const showAddListingModal = ref(false);
 const error = ref(null);
 const page = ref(1);
 const perPage = 9; // Number of items per page
+
+// Set meta tags for the home page
+const { setPageMeta } = useSiteMeta();
+setPageMeta({
+  title: "Home",
+  description:
+    "Track and manage your property listings in one place. Save time and stay organized with House Searcher.",
+});
 
 // Data fetching with pagination
 const {

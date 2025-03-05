@@ -109,6 +109,14 @@ const error = ref(null);
 const loading = ref(false);
 const registrationComplete = ref(false);
 
+// Set meta tags for the signup page
+const { setPageMeta } = useSiteMeta();
+setPageMeta({
+  title: "Sign Up",
+  description:
+    "Create your House Searcher account to start tracking and managing property listings.",
+});
+
 const handleSignup = async () => {
   try {
     // Basic validation

@@ -533,4 +533,26 @@ const fetchListingContent = async () => {
     fetchingContent.value = false;
   }
 };
+
+// Set dynamic meta tags for the listing detail page
+const { setPageMeta } = useSiteMeta();
+
+// Watch for listing data to update meta tags
+watch(
+  () => listing.value,
+  (newListing) => {
+    if (newListing) {
+      setPageMeta({
+        title: newListing.title || "Property Listing",
+        description: `${newListing.bedroom_count || ""} bedroom property in ${
+          newListing.location || "Unknown location"
+        } for ${newListing.currency || ""}${
+          newListing.price?.toLocaleString() || ""
+        }`,
+        type: "article",
+      });
+    }
+  },
+  { immediate: true }
+);
 </script>

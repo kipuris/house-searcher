@@ -11,12 +11,8 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    // Server-only environment variables (not exposed to the client)
-    firecrawlApiKey: process.env.FIRECRAWL_API_KEY,
-
     // Public variables that are exposed to the client
     public: {
-      firecrawlApiKey: process.env.FIRECRAWL_API_KEY,
       firecrawlApiUrl: process.env.FIRECRAWL_API_URL ||
         "https://api.firecrawl.dev/v1",
       apiBase: process.env.SUPABASE_URL || "http://localhost:54321",

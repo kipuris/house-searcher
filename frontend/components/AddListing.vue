@@ -213,7 +213,6 @@ const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
-const firecrawlApiKey = runtimeConfig.public.firecrawlApiKey;
 
 // Form state
 const url = ref("");
@@ -246,19 +245,17 @@ const currencyOptions = [
 // Function to check extraction job status
 async function checkExtractionStatus(id: string) {
   try {
-    // Correct endpoint format is /v1/extract/{id}
-    const response = await fetch(`https://api.firecrawl.dev/v1/extract/${id}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${firecrawlApiKey}`,
-      },
-    });
+    // Use Supabase edge function instead of direct API call
+    const { data: result, error: checkError } = await supabase.functions.invoke(
+      `check-extraction/${id}`,
+      {
+        method: "GET",
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error(`Status check failed: ${response.status}`);
+    if (checkError) {
+      throw new Error(`Status check failed: ${checkError.message}`);
     }
-
-    const result = await response.json();
 
     if (result.status === "completed") {
       // Stop polling
@@ -439,9 +436,9 @@ const handleSubmitUrl = async () => {
     loading.value = true;
     error.value = null;
 
-    // Call the scrape-listing Edge Function
+    // Call the extract-property Edge Function instead of scrape-listing
     const { data: scrapedResult, error: scrapeError } =
-      await supabase.functions.invoke("scrape-listing", {
+      await supabase.functions.invoke("extract-property", {
         body: { url: url.value },
       });
 
