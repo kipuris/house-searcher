@@ -64,8 +64,6 @@ const pendingExtractions = ref([]);
 const loading = ref(false);
 const checkingStatus = ref({});
 
-const runtimeConfig = useRuntimeConfig();
-
 // Define emits
 const emit = defineEmits(["update-listing"]);
 

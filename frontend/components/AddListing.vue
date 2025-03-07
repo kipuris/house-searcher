@@ -212,7 +212,6 @@ const isOpen = computed({
 const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 
 // Form state
 const url = ref("");

@@ -8,9 +8,11 @@ export default defineNuxtConfig({
     redirect: false,
     cookieOptions: {
       maxAge: 60 * 60 * 8,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      secure: true,
     },
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_ANON_KEY,
   },
   colorMode: {
     preference: "light",
@@ -24,13 +26,22 @@ export default defineNuxtConfig({
     "/**": { ssr: false },
   },
 
+  app: {
+    head: {
+      meta: [
+        {
+          name: "Content-Security-Policy",
+          content:
+            "default-src 'self' https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+        },
+      ],
+    },
+  },
+
   runtimeConfig: {
     // Public variables that are exposed to the client
     public: {
-      firecrawlApiUrl: process.env.FIRECRAWL_API_URL ||
-        "https://api.firecrawl.dev/v1",
-      apiBase: process.env.SUPABASE_URL || "http://localhost:54321",
-      supabaseKey: process.env.SUPABASE_ANON_KEY,
+      siteUrl: process.env.SITE_URL || "http://localhost:3000",
     },
   },
 });
