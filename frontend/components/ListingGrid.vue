@@ -51,14 +51,14 @@
         <!-- View Toggle -->
         <UButtonGroup size="sm">
           <UButton
-            :color="viewMode === 'grid' ? 'primary' : 'gray'"
-            @click="viewMode = 'grid'"
+            :color="props.viewMode === 'grid' ? 'primary' : 'gray'"
+            @click="$emit('update:viewMode', 'grid')"
             icon="i-heroicons-squares-2x2"
             :ui="{ rounded: 'rounded-l-md rounded-r-none' }"
           />
           <UButton
-            :color="viewMode === 'list' ? 'primary' : 'gray'"
-            @click="viewMode = 'list'"
+            :color="props.viewMode === 'list' ? 'primary' : 'gray'"
+            @click="$emit('update:viewMode', 'list')"
             icon="i-heroicons-bars-3"
             :ui="{ rounded: 'rounded-r-md rounded-l-none' }"
           />
@@ -76,7 +76,7 @@
 
     <!-- Loading State -->
     <div
-      v-if="loading && viewMode === 'grid'"
+      v-if="loading && props.viewMode === 'grid'"
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
     >
       <UCard v-for="n in 6" :key="n" class="relative">
@@ -93,7 +93,7 @@
     </div>
 
     <!-- Loading State for List View -->
-    <div v-if="loading && viewMode === 'list'" class="space-y-4">
+    <div v-if="loading && props.viewMode === 'list'" class="space-y-4">
       <UCard v-for="n in 6" :key="n" class="relative">
         <div class="flex flex-col md:flex-row gap-4">
           <div class="w-full md:w-48 h-36 flex-shrink-0">
@@ -125,7 +125,7 @@
 
     <!-- Grid Layout -->
     <div
-      v-else-if="filteredListings.length && viewMode === 'grid'"
+      v-else-if="filteredListings.length && props.viewMode === 'grid'"
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
     >
       <UCard
@@ -214,6 +214,15 @@
               >
                 Edit
               </UButton>
+              <UButton
+                color="gray"
+                variant="ghost"
+                icon="i-heroicons-folder-plus"
+                size="xs"
+                @click.stop="saveToFolder(listing)"
+              >
+                Save
+              </UButton>
               <a
                 v-if="listing.url"
                 :href="listing.url"
@@ -236,7 +245,7 @@
 
     <!-- List Layout -->
     <div
-      v-else-if="filteredListings.length && viewMode === 'list'"
+      v-else-if="filteredListings.length && props.viewMode === 'list'"
       class="space-y-4"
     >
       <UCard
@@ -313,7 +322,7 @@
                 </span>
               </div>
             </div>
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
               <UButton
                 color="gray"
                 variant="ghost"
@@ -322,6 +331,15 @@
                 @click.stop="editListing(listing)"
               >
                 Edit
+              </UButton>
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-folder-plus"
+                @click.stop="saveToFolder(listing)"
+              >
+                Save
               </UButton>
             </div>
           </div>
@@ -467,6 +485,81 @@
         </form>
       </UCard>
     </UModal>
+
+    <!-- Folder Modal -->
+    <UModal v-model="showFolderModal">
+      <UCard>
+        <template #header>
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold">Save to Folder</h3>
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <!-- Error Alert -->
+          <UAlert
+            v-if="folderError"
+            type="danger"
+            :description="folderError"
+            class="mb-4"
+          />
+
+          <!-- Loading State -->
+          <div v-if="loadingFolders" class="py-4 text-center">
+            <UIcon
+              name="i-heroicons-arrow-path"
+              class="animate-spin w-6 h-6 mx-auto mb-2"
+            />
+            <p class="text-gray-500">Loading folders...</p>
+          </div>
+
+          <!-- No Folders -->
+          <div v-else-if="!folders.length" class="text-center py-4">
+            <UIcon
+              name="i-heroicons-folder-plus"
+              class="text-gray-400 w-12 h-12 mx-auto mb-2"
+            />
+            <p class="text-gray-700 font-medium">No folders yet</p>
+            <p class="text-sm text-gray-500 mb-4">
+              Create folders to organize your listings
+            </p>
+            <UButton color="primary" @click="navigateToFolders">
+              Create Folder
+            </UButton>
+          </div>
+
+          <!-- Folder List -->
+          <div v-else class="max-h-72 overflow-y-auto">
+            <UButton
+              v-for="folder in folders"
+              :key="folder.id"
+              block
+              variant="ghost"
+              class="justify-start border-b last:border-0"
+              :disabled="savingToFolder"
+              @click="addToFolder(folder.id)"
+            >
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-folder" class="text-primary-500" />
+                <span>{{ folder.name }}</span>
+              </div>
+            </UButton>
+          </div>
+
+          <!-- Cancel Button -->
+          <div class="flex justify-end">
+            <UButton
+              color="gray"
+              variant="soft"
+              @click="showFolderModal = false"
+              :disabled="savingToFolder"
+            >
+              Cancel
+            </UButton>
+          </div>
+        </div>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
@@ -497,6 +590,10 @@ const props = defineProps({
     type: Number,
     default: 1,
   },
+  viewMode: {
+    type: String,
+    default: "grid",
+  },
 });
 
 const emit = defineEmits([
@@ -504,12 +601,21 @@ const emit = defineEmits([
   "page-change",
   "update-listing",
   "delete-listing",
+  "save-to-folder",
+  "update:viewMode",
 ]);
 
 // Search and filter
 const search = ref("");
 const sortBy = ref("");
-const viewMode = ref("grid");
+const viewMode = computed({
+  get: () => props.viewMode,
+  set: (value) => {
+    if (isClient) {
+      localStorage.setItem("listingViewMode", value);
+    }
+  },
+});
 const isClient = useNuxtApp().$isClient;
 
 // Initialize from localStorage only on client-side
@@ -649,6 +755,17 @@ const saving = ref(false);
 const error = ref<string | null>(null);
 const deletingId = ref<string | null>(null);
 
+// Folder functionality
+const showFolderModal = ref(false);
+const listingForFolder = ref<Listing | null>(null);
+const folders = ref<{ id: string; name: string; description: string | null }[]>(
+  []
+);
+const loadingFolders = ref(false);
+const folderError = ref<string | null>(null);
+const savingToFolder = ref(false);
+const selectedFolderId = ref<string>("");
+
 const currencyOptions = [
   { label: "EUR", value: "EUR" },
   { label: "USD", value: "USD" },
@@ -732,5 +849,100 @@ const clearFilters = () => {
 
 const navigateToListing = (id: string) => {
   router.push(`/listing/${id}`);
+};
+
+// Navigate to folders page
+const navigateToFolders = () => {
+  showFolderModal.value = false;
+  router.push("/folders");
+};
+
+// Function to open folder modal for a listing
+const saveToFolder = async (listing: Listing) => {
+  listingForFolder.value = listing;
+  showFolderModal.value = true;
+  await loadFolders();
+};
+
+// Load user's folders
+const loadFolders = async () => {
+  try {
+    loadingFolders.value = true;
+    folderError.value = null;
+
+    const { data: userFolders, error: foldersError } = await supabase
+      .from("folders")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (foldersError) throw foldersError;
+    folders.value = userFolders || [];
+  } catch (e: any) {
+    folderError.value = e.message;
+    console.error("Error loading folders:", e);
+  } finally {
+    loadingFolders.value = false;
+  }
+};
+
+// Add listing to a folder
+const addToFolder = async (folderId: string) => {
+  if (!listingForFolder.value) return;
+
+  try {
+    savingToFolder.value = true;
+    folderError.value = null;
+
+    // Check if listing is already in the folder
+    const { data: existing, error: checkError } = await supabase
+      .from("folder_listings")
+      .select("id")
+      .eq("folder_id", folderId)
+      .eq("listing_id", listingForFolder.value.id)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    // If not already in folder, add it
+    if (!existing) {
+      const { error: insertError } = await supabase
+        .from("folder_listings")
+        .insert({
+          folder_id: folderId,
+          listing_id: listingForFolder.value.id,
+        });
+
+      if (insertError) throw insertError;
+    }
+
+    // Close modal and emit event to parent with folder ID for redirection
+    showFolderModal.value = false;
+    emit("save-to-folder", {
+      listing: listingForFolder.value,
+      folderId: folderId,
+    });
+    listingForFolder.value = null;
+  } catch (e: any) {
+    folderError.value = e.message;
+    console.error("Error adding to folder:", e);
+  } finally {
+    savingToFolder.value = false;
+  }
+};
+
+const closeFolderModal = () => {
+  showFolderModal.value = false;
+  listingForFolder.value = null;
+};
+
+const handleSaveFolder = async () => {
+  if (!selectedFolderId.value || !listingForFolder.value) return;
+
+  try {
+    await addToFolder(selectedFolderId.value);
+  } catch (e: any) {
+    folderError.value = e.message;
+    console.error("Error saving to folder:", e);
+  }
 };
 </script>
