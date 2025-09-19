@@ -61,6 +61,14 @@
             }}
           </span>
           <div class="flex gap-2">
+            <USelectMenu
+              v-if="folderListings.length > 0"
+              v-model="sortBy"
+              :options="sortOptions"
+              placeholder="Sort by"
+              class="w-40"
+              @change="updateSortQuery"
+            />
             <UButton
               v-if="folderListings.length > 0"
               color="gray"
@@ -100,7 +108,7 @@
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
         >
           <UCard
-            v-for="listing in folderListings"
+            v-for="listing in sortedListings"
             :key="listing.id"
             class="relative cursor-pointer hover:shadow-md transition-shadow"
             @click="navigateToListing(listing.id)"
@@ -140,13 +148,18 @@
                 </p>
               </div>
 
-              <div class="flex justify-between items-center">
-                <span class="text-lg sm:text-xl font-bold text-primary-600">
-                  {{ formatPrice(listing.price, listing.currency) }}
-                </span>
-                <span class="text-xs sm:text-sm text-gray-500">
-                  {{ listing.bedroom_count }} beds
-                </span>
+              <div class="space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-lg sm:text-xl font-bold text-primary-600">
+                    {{ formatPrice(listing.price, listing.currency) }}
+                  </span>
+                  <span class="text-xs sm:text-sm text-gray-500">
+                    {{ listing.bedroom_count }} beds
+                  </span>
+                </div>
+                <div v-if="listing.price_per_sqm" class="text-xs text-gray-500">
+                  {{ formatPrice(listing.price_per_sqm, listing.currency) }}/m²
+                </div>
               </div>
             </div>
           </UCard>
@@ -309,6 +322,26 @@ const availableListings = ref([]);
 const loadingListings = ref(false);
 const availableListingsError = ref(null);
 
+// Sort functionality
+const sortBy = ref("latest");
+const sortOptions = [
+  { label: "Latest", value: "latest" },
+  { label: "Oldest", value: "oldest" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+  { label: "Title: A to Z", value: "title_asc" },
+  { label: "Title: Z to A", value: "title_desc" },
+  { label: "Bedrooms: Low to High", value: "beds_asc" },
+  { label: "Bedrooms: High to Low", value: "beds_desc" },
+];
+
+// Initialize sort from query params
+const router = useRouter();
+const query = route.query;
+if (query.sort && sortOptions.some((option) => option.value === query.sort)) {
+  sortBy.value = query.sort;
+}
+
 // Fetch folder data and listings
 const { pending, refresh: refreshData } = await useAsyncData(
   `folder-${folderId}`,
@@ -469,6 +502,60 @@ async function fetchAvailableListings() {
   } finally {
     loadingListings.value = false;
   }
+}
+
+// Sort listings based on selected criteria
+const sortedListings = computed(() => {
+  if (!folderListings.value.length) return [];
+
+  const listings = [...folderListings.value];
+  const sortValue =
+    typeof sortBy.value === "object" ? sortBy.value.value : sortBy.value;
+
+  switch (sortValue) {
+    case "latest":
+      return listings.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+    case "oldest":
+      return listings.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+    case "price_asc":
+      return listings.sort((a, b) => (a.price || 0) - (b.price || 0));
+    case "price_desc":
+      return listings.sort((a, b) => (b.price || 0) - (a.price || 0));
+    case "title_asc":
+      return listings.sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "")
+      );
+    case "title_desc":
+      return listings.sort((a, b) =>
+        (b.title || "").localeCompare(a.title || "")
+      );
+    case "beds_asc":
+      return listings.sort(
+        (a, b) => (a.bedroom_count || 0) - (b.bedroom_count || 0)
+      );
+    case "beds_desc":
+      return listings.sort(
+        (a, b) => (b.bedroom_count || 0) - (a.bedroom_count || 0)
+      );
+    default:
+      return listings;
+  }
+});
+
+// Update query parameter when sort changes
+function updateSortQuery() {
+  const sortValue =
+    typeof sortBy.value === "object" ? sortBy.value.value : sortBy.value;
+  router.push({
+    query: {
+      ...route.query,
+      sort: sortValue,
+    },
+  });
 }
 
 // Filter available listings based on search

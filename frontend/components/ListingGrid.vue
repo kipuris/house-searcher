@@ -191,9 +191,14 @@
           </div>
 
           <div class="flex justify-between items-center">
-            <span class="text-lg sm:text-xl font-bold text-primary-600">
-              {{ formatPrice(listing.price, listing.currency) }}
-            </span>
+            <div class="flex flex-col">
+              <span class="text-lg sm:text-xl font-bold text-primary-600">
+                {{ formatPrice(listing.price, listing.currency) }}
+              </span>
+              <span v-if="listing.price_per_sqm" class="text-xs text-gray-500">
+                {{ formatPrice(listing.price_per_sqm, listing.currency) }}/m²
+              </span>
+            </div>
             <span class="text-xs sm:text-sm text-gray-500">
               {{ listing.bedroom_count }} beds
             </span>
@@ -296,9 +301,19 @@
                 <p class="text-sm text-gray-500">{{ listing.location }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-lg font-bold text-primary-600">
-                  {{ formatPrice(listing.price, listing.currency) }}
-                </span>
+                <div class="flex flex-col items-end">
+                  <span class="text-lg font-bold text-primary-600">
+                    {{ formatPrice(listing.price, listing.currency) }}
+                  </span>
+                  <span
+                    v-if="listing.price_per_sqm"
+                    class="text-xs text-gray-500"
+                  >
+                    {{
+                      formatPrice(listing.price_per_sqm, listing.currency)
+                    }}/m²
+                  </span>
+                </div>
                 <UButton
                   color="red"
                   variant="soft"

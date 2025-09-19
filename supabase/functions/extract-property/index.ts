@@ -7,6 +7,7 @@ interface ScrapedListing {
   location: string;
   bedroom_count: number;
   image: string;
+  price_per_sqm?: number;
 }
 
 // Firecrawl API endpoint
@@ -62,7 +63,7 @@ Deno.serve(async (req) => {
     const requestPayload = {
       urls: [url],
       prompt:
-        "Extract property listing details including title, price, currency, location, bedroom count, and image URL",
+        "Extract property listing details including title, price, currency, location, bedroom count, image URL, and price per square meter if available",
       schema: {
         type: "object",
         properties: {
@@ -90,6 +91,11 @@ Deno.serve(async (req) => {
           image: {
             type: "string",
             description: "URL of the main property image",
+          },
+          price_per_sqm: {
+            type: "number",
+            description:
+              "Price per square meter of the property (if available)",
           },
         },
         required: ["title", "price", "currency", "location", "bedroom_count"],
@@ -132,7 +138,7 @@ Deno.serve(async (req) => {
     let result;
     try {
       result = JSON.parse(responseText);
-    } catch (parseError) {
+    } catch (_parseError) {
       throw new Error(
         `Failed to parse Firecrawl API response: ${responseText}`,
       );
@@ -186,6 +192,11 @@ Deno.serve(async (req) => {
           ? result.data.bedroom_count
           : parseInt(result.data.bedroom_count) || 0,
         image: result.data.image || "",
+        price_per_sqm: result.data.price_per_sqm
+          ? (typeof result.data.price_per_sqm === "number"
+            ? result.data.price_per_sqm
+            : parseFloat(result.data.price_per_sqm))
+          : undefined,
       };
 
       console.log(

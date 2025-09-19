@@ -121,6 +121,20 @@
             />
           </UFormGroup>
 
+          <UFormGroup label="Price per m²">
+            <UInput
+              :model-value="scrapedData.price_per_sqm || ''"
+              @update:model-value="
+                scrapedData.price_per_sqm = $event ? parseFloat($event) : null
+              "
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="2000"
+              :ui="{ base: 'bg-white dark:bg-white' }"
+            />
+          </UFormGroup>
+
           <UFormGroup label="Currency">
             <USelect
               v-model="scrapedData.currency"
@@ -226,6 +240,7 @@ const scrapedData = ref<{
   bedroom_count?: number;
   image?: string;
   url?: string;
+  price_per_sqm?: number | string | null;
 } | null>(null);
 const error = ref<string | null>(null);
 const imageError = ref(false);
@@ -277,6 +292,7 @@ async function checkExtractionStatus(id: string) {
             ? result.data.bedroom_count
             : parseInt(result.data.bedroom_count) || 0,
         image: result.data.image || "",
+        price_per_sqm: result.data.price_per_sqm || null,
       };
 
       // Update the pending listing in the database
@@ -289,6 +305,7 @@ async function checkExtractionStatus(id: string) {
           location: extractedData.location,
           bedroom_count: extractedData.bedroom_count,
           image: extractedData.image,
+          price_per_sqm: extractedData.price_per_sqm || null,
           extraction_job_id: null, // Clear the job ID since it's completed
           last_checked: new Date().toISOString(),
         })
@@ -422,6 +439,7 @@ const handleSubmitUrl = async () => {
       bedroom_count: 1,
       image: "",
       url: url.value,
+      price_per_sqm: null,
     };
     return;
   }
@@ -464,6 +482,7 @@ const handleSubmitUrl = async () => {
         location: "Pending extraction",
         bedroom_count: 0,
         image: "",
+        price_per_sqm: null, // Will be updated after extraction
         last_checked: new Date().toISOString(),
         change_history: [],
         updated_flag: false,
@@ -565,6 +584,11 @@ const handleSave = async () => {
       location: scrapedData.value.location,
       bedroom_count: scrapedData.value.bedroom_count || 0,
       image: scrapedData.value.image || undefined,
+      price_per_sqm: scrapedData.value.price_per_sqm
+        ? typeof scrapedData.value.price_per_sqm === "string"
+          ? parseFloat(scrapedData.value.price_per_sqm)
+          : scrapedData.value.price_per_sqm
+        : null,
       last_checked: new Date().toISOString(),
       change_history: [],
       updated_flag: false,

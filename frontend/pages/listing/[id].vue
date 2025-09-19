@@ -34,9 +34,20 @@
 
         <!-- Price and Bedrooms -->
         <div class="flex flex-wrap items-center gap-4">
-          <UBadge size="lg" color="primary" class="text-lg font-bold">
-            {{ formattedPrice }}
-          </UBadge>
+          <div class="flex flex-col">
+            <UBadge size="lg" color="primary" class="text-lg font-bold">
+              {{ formattedPrice }}
+            </UBadge>
+            <UBadge
+              v-if="listing.price_per_sqm"
+              size="sm"
+              color="gray"
+              variant="soft"
+              class="mt-1"
+            >
+              {{ formatPrice(listing.price_per_sqm, listing.currency) }}/m²
+            </UBadge>
+          </div>
           <UBadge
             size="md"
             color="gray"
@@ -440,6 +451,15 @@ const formattedPrice = computed(() => {
     maximumFractionDigits: 0,
   }).format(listing.value.price);
 });
+
+// Format price function for reuse
+const formatPrice = (price: number, currency: string) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "USD",
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 
 // Fetch listing content
 const fetchListingContent = async () => {
